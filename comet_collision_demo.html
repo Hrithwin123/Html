@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: #0d0d14;
+    }
+
+    #wrap {
+      position: relative;
+      width: 100%;
+      height: 340px;
+      background: #0d0d14;
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    #node-card {
+      position: absolute;
+      width: 120px;
+      height: 148px;
+      border-radius: 16px;
+      background: #16162a;
+      border: 1.5px solid rgba(99, 102, 241, 0.35);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      pointer-events: none;
+    }
+
+    #node-card .avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: rgba(99, 102, 241, 0.2);
+      border: 2px solid rgba(99, 102, 241, 0.5);
+    }
+
+    #node-card .line1 {
+      width: 64px;
+      height: 7px;
+      background: rgba(255, 255, 255, 0.18);
+      border-radius: 4px;
+    }
+
+    #node-card .line2 {
+      width: 48px;
+      height: 5px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+    }
+
+    #controls {
+      position: absolute;
+      bottom: 14px;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    #controls button {
+      font-size: 12px;
+      padding: 5px 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.06);
+      color: rgba(255, 255, 255, 0.7);
+      cursor: pointer;
+    }
+
+    #controls button:hover {
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    #controls button.active {
+      border-color: rgba(99, 102, 241, 0.8);
+      color: rgba(165, 180, 252, 1);
+      background: rgba(99, 102, 241, 0.15);
+    }
+  </style>
+</head>
+
+<body>
+  <div id="wrap">
+    <canvas id="c"></canvas>
+    <div id="node-card">
+      <div class="avatar"></div>
+      <div class="line1"></div>
+      <div class="line2"></div>
+    </div>
+    <div id="controls">
+      <button id="btn-card" class="active">Card node</button>
+      <button id="btn-circle">Circle node</button>
+    </div>
+  </div>
+  <script>
+    var wrap = document.getElementById('wrap');
+    var canvas = document.getElementById('c');
+    var ctx = canvas.getContext('2d');
+    var card = document.getElementById('node-card');
+    var btnCard = document.getElementById('btn-card');
+    var btnCircle = document.getElementById('btn-circle');
+
+    var W, H, nodeType = 'card';
+    var CARD_W = 120, CARD_H = 148, CARD_R = 16, CIRC_R = 22;
+
+    function resize() {
+      var r = wrap.getBoundingClientRect();
+      W = r.width; H = r.height;
+      canvas.width = W * devicePixelRatio;
+      canvas.height = H * devicePixelRatio;
+      canvas.style.width = W + 'px';
+      canvas.style.height = H + 'px';
+      ctx.scale(devicePixelRatio, devicePixelRatio);
+    }
+    resize();
+
+    btnCard.onclick = function () { nodeType = 'card'; btnCard.classList.add('active'); btnCircle.classList.remove('active'); };
+    btnCircle.onclick = function () { nodeType = 'circle'; btnCircle.classList.add('active'); btnCard.classList.remove('active'); };
+
+    function nodePos() { return { x: W * 0.72, y: H * 0.5 }; }
+    function srcPos() { return { x: W * 0.12, y: H * 0.5 }; }
+
+    function positionCardEl() {
+      var n = nodePos();
+      card.style.left = (n.x - CARD_W / 2) + 'px';
+      card.style.top = (n.y - CARD_H / 2) + 'px';
+      card.style.display = nodeType === 'card' ? 'flex' : 'none';
+    }
+
+    // ── comet ─────────────────────────────────────────────────────────────────────
+    var TRAIL_LEN = 38;
+    var trail = [];
+    var cometT = 0;
+    var COMET_SPEED = 0.00042;
+    var cometHidden = 0; // ms to hide comet after collision
+
+    // ── energy events ─────────────────────────────────────────────────────────────
+    // On collision: two sparks crawl CW and CCW from the impact point.
+    // The node glow is driven by how far the sparks have travelled — NOT instant.
+    // Phases: 0=travelling, 1=holding, 2=fading
+
+    var energyEvents = [];
+    var MAX_SPREAD = Math.PI * 0.3;   // 54 deg each side = 30% of circle
+    var SPARK_SPEED = MAX_SPREAD / 900; // reach MAX_SPREAD in ~900ms
+    var HOLD_MS = 250;
+
+    // nodeGlow is computed from the active events each frame — no separate flashAlpha
+    function getNodeGlow() {
+      var glow = 0;
+      for (var i = 0; i < energyEvents.length; i++) {
+        var ev = energyEvents[i];
+        var travelFrac = Math.min(1, (ev.cwAngle - ev.impactAngle) / MAX_SPREAD);
+        var g;
+        if (ev.phase === 0 || ev.phase === 1) {
+          g = travelFrac * 0.75;
+        } else {
+          g = ev.fadeAlpha * 0.6;
+        }
+        if (g > glow) glow = g;
+      }
+      return glow;
+    }
+
+    function spawnCollision(impactAngle) {
+      energyEvents.push({
+        impactAngle: impactAngle,
+        cwAngle: impactAngle,
+        cwDone: false,
+        ccwAngle: impactAngle,
+        ccwDone: false,
+        holdMs: 0,
+        fadeAlpha: 1,
+        phase: 0,
+        type: nodeType
+      });
+    }
+
+    // ── draw static edge ──────────────────────────────────────────────────────────
+    function drawEdge() {
+      var s = srcPos(), n = nodePos();
+      ctx.beginPath();
+      ctx.moveTo(s.x, s.y);
+      ctx.lineTo(n.x, n.y);
+      ctx.strokeStyle = 'rgba(99,102,241,0.18)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
+    // ── draw source node ──────────────────────────────────────────────────────────
+    function drawSource() {
+      var s = srcPos();
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, 18, 0, Math.PI * 2);
+      ctx.fillStyle = '#16162a';
+      ctx.strokeStyle = 'rgba(99,102,241,0.4)';
+      ctx.lineWidth = 1.5;
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = 'rgba(165,180,252,0.6)';
+      ctx.font = '600 13px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('A', s.x, s.y);
+    }
+
+    // ── draw destination node ─────────────────────────────────────────────────────
+    function drawDestNode(glow) {
+      var n = nodePos();
+      if (nodeType === 'circle') {
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, CIRC_R, 0, Math.PI * 2);
+        ctx.fillStyle = glow > 0
+          ? 'rgba(' + Math.round(22 + glow * 55) + ',' + Math.round(22 + glow * 35) + ',' + Math.round(42 + glow * 80) + ',1)'
+          : '#16162a';
+        ctx.strokeStyle = glow > 0
+          ? 'rgba(165,180,252,' + (0.35 + glow * 0.45) + ')'
+          : 'rgba(99,102,241,0.4)';
+        ctx.lineWidth = 1.5 + glow * 1.2;
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = 'rgba(165,180,252,' + (0.6 + glow * 0.4) + ')';
+        ctx.font = '600 13px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('B', n.x, n.y);
+      }
+    }
+
+    // ── draw card glow ────────────────────────────────────────────────────────────
+    function drawCardGlow(glow) {
+      if (glow <= 0 || nodeType !== 'card') return;
+      var n = nodePos();
+      ctx.beginPath();
+      ctx.roundRect(n.x - CARD_W / 2, n.y - CARD_H / 2, CARD_W, CARD_H, CARD_R);
+      ctx.fillStyle = 'rgba(99,102,241,' + (glow * 0.12) + ')';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(165,180,252,' + (glow * 0.85) + ')';
+      ctx.lineWidth = 1.5 + glow * 1.5;
+      ctx.stroke();
+    }
+
+    // ── border glow arc (the lit trail behind each spark) ────────────────────────
+    function drawBorderGlow(n, fromAngle, toAngle, alpha, isCircle) {
+      if (Math.abs(toAngle - fromAngle) < 0.005) return;
+      var ccw = toAngle < fromAngle;
+
+      // Layer 1: wide outer glow
+      ctx.save();
+      ctx.shadowColor = 'rgba(99,102,241,' + (alpha * 0.8) + ')';
+      ctx.shadowBlur = 16;
+      ctx.beginPath();
+      if (isCircle) {
+        ctx.arc(n.x, n.y, CIRC_R, fromAngle, toAngle, ccw);
+      } else {
+        ctx.ellipse(n.x, n.y, CARD_W / 2, CARD_H / 2, 0, fromAngle, toAngle, ccw);
+      }
+      ctx.strokeStyle = 'rgba(99,102,241,' + (alpha * 0.28) + ')';
+      ctx.lineWidth = 11;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+      ctx.restore();
+
+      // Layer 2: mid glow
+      ctx.save();
+      ctx.shadowColor = 'rgba(165,180,252,' + (alpha * 0.9) + ')';
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      if (isCircle) {
+        ctx.arc(n.x, n.y, CIRC_R, fromAngle, toAngle, ccw);
+      } else {
+        ctx.ellipse(n.x, n.y, CARD_W / 2, CARD_H / 2, 0, fromAngle, toAngle, ccw);
+      }
+      ctx.strokeStyle = 'rgba(165,180,252,' + (alpha * 0.55) + ')';
+      ctx.lineWidth = 4;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+      ctx.restore();
+
+      // Layer 3: sharp bright core
+      ctx.save();
+      ctx.beginPath();
+      if (isCircle) {
+        ctx.arc(n.x, n.y, CIRC_R, fromAngle, toAngle, ccw);
+      } else {
+        ctx.ellipse(n.x, n.y, CARD_W / 2, CARD_H / 2, 0, fromAngle, toAngle, ccw);
+      }
+      ctx.strokeStyle = 'rgba(220,228,255,' + (alpha * 0.9) + ')';
+      ctx.lineWidth = 1.6;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // ── spark tip (moving bright dot at the leading edge) ────────────────────────
+    function drawSparkTip(n, angle, alpha, isCircle) {
+      var px, py;
+      if (isCircle) {
+        px = n.x + Math.cos(angle) * CIRC_R;
+        py = n.y + Math.sin(angle) * CIRC_R;
+      } else {
+        px = n.x + Math.cos(angle) * (CARD_W / 2);
+        py = n.y + Math.sin(angle) * (CARD_H / 2);
+      }
+
+      var g1 = ctx.createRadialGradient(px, py, 0, px, py, 10);
+      g1.addColorStop(0, 'rgba(180,195,255,' + (alpha * 0.0) + ')');
+      g1.addColorStop(0.25, 'rgba(180,195,255,' + (alpha * 0.3) + ')');
+      g1.addColorStop(1, 'rgba(99,102,241,0)');
+      ctx.beginPath();
+      ctx.arc(px, py, 10, 0, Math.PI * 2);
+      ctx.fillStyle = g1;
+      ctx.fill();
+
+      var g2 = ctx.createRadialGradient(px, py, 0, px, py, 4);
+      g2.addColorStop(0, 'rgba(255,255,255,' + alpha + ')');
+      g2.addColorStop(0.45, 'rgba(180,195,255,' + (alpha * 0.85) + ')');
+      g2.addColorStop(1, 'rgba(99,102,241,' + (alpha * 0.15) + ')');
+      ctx.beginPath();
+      ctx.arc(px, py, 4, 0, Math.PI * 2);
+      ctx.fillStyle = g2;
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(px, py, 1.4, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255,255,255,' + alpha + ')';
+      ctx.fill();
+    }
+
+    // ── update + draw energy events ───────────────────────────────────────────────
+    function drawEnergyEvents(dt) {
+      var n = nodePos();
+      var isCircle = nodeType === 'circle';
+
+      for (var i = energyEvents.length - 1; i >= 0; i--) {
+        var ev = energyEvents[i];
+
+        if (ev.phase === 0) {
+          if (!ev.cwDone) {
+            ev.cwAngle += SPARK_SPEED * dt;
+            if (ev.cwAngle - ev.impactAngle >= MAX_SPREAD) {
+              ev.cwAngle = ev.impactAngle + MAX_SPREAD;
+              ev.cwDone = true;
+            }
+          }
+          if (!ev.ccwDone) {
+            ev.ccwAngle -= SPARK_SPEED * dt;
+            if (ev.impactAngle - ev.ccwAngle >= MAX_SPREAD) {
+              ev.ccwAngle = ev.impactAngle - MAX_SPREAD;
+              ev.ccwDone = true;
+            }
+          }
+          if (ev.cwDone && ev.ccwDone) ev.phase = 1;
+
+        } else if (ev.phase === 1) {
+          ev.holdMs += dt;
+          if (ev.holdMs >= HOLD_MS) ev.phase = 2;
+
+        } else {
+          ev.fadeAlpha -= dt * 0.0016;
+          if (ev.fadeAlpha <= 0) {
+            energyEvents.splice(i, 1);
+            continue;
+          }
+        }
+
+        var alpha = ev.fadeAlpha;
+
+        // (border arc removed — node glow only via getNodeGlow())
+      }
+    }
+
+    // ── draw comet ────────────────────────────────────────────────────────────────
+    function drawComet(dt) {
+      var s = srcPos(), n = nodePos();
+      var prevT = cometT;
+      cometT = (cometT + COMET_SPEED * dt) % 1;
+
+      if (cometT < prevT) {
+        var impactAngle = Math.atan2(s.y - n.y, s.x - n.x);
+        spawnCollision(impactAngle);
+        trail.length = 0;       // wipe trail instantly on impact
+        cometHidden = 1400;    // hide for 1.4s (while glow plays out)
+      }
+
+      // Count down hidden timer
+      if (cometHidden > 0) {
+        cometHidden -= dt;
+        if (cometHidden <= 0) cometT = 0; // restart from source
+        return;
+      }
+
+      var hx = s.x + (n.x - s.x) * cometT;
+      var hy = s.y + (n.y - s.y) * cometT;
+
+      // Fade out as comet approaches the node border
+      // distToNode = distance from head to node center
+      // fadeStart = when head is 2.5 radii away, fully gone at 0.5 radii
+      var nodeR = nodeType === 'circle' ? CIRC_R : Math.max(CARD_W, CARD_H) / 2;
+      var distToNode = Math.hypot(n.x - hx, n.y - hy);
+      var fadeStart = nodeR * 2.5;
+      var fadeEnd = nodeR * 0.5;
+      var cometAlpha = distToNode <= fadeEnd ? 0
+        : distToNode >= fadeStart ? 1
+          : (distToNode - fadeEnd) / (fadeStart - fadeEnd);
+
+      if (cometAlpha <= 0) return;
+
+      trail.unshift({ x: hx, y: hy });
+      if (trail.length > TRAIL_LEN) trail.pop();
+
+      for (var i = 1; i < trail.length; i++) {
+        var frac = 1 - i / trail.length;
+        var ease = frac * frac * frac;
+        ctx.beginPath();
+        ctx.moveTo(trail[i - 1].x, trail[i - 1].y);
+        ctx.lineTo(trail[i].x, trail[i].y);
+        ctx.strokeStyle = 'rgba(165,180,252,' + (ease * 0.75 * cometAlpha) + ')';
+        ctx.lineWidth = 0.5 + frac * 2.8;
+        ctx.lineCap = 'round';
+        ctx.stroke();
+        if (i % 3 === 0 && Math.random() < 0.6) {
+          var ex = trail[i].x + (Math.random() - 0.5) * 9;
+          var ey = trail[i].y + (Math.random() - 0.5) * 9;
+          ctx.beginPath();
+          ctx.arc(ex, ey, 0.8 + frac * 1.4, 0, Math.PI * 2);
+          ctx.fillStyle = frac > 0.6
+            ? 'rgba(220,225,255,' + (ease * 0.9 * cometAlpha) + ')'
+            : 'rgba(99,102,241,' + (ease * 0.6 * cometAlpha) + ')';
+          ctx.fill();
+        }
+      }
+
+      var corona = ctx.createRadialGradient(hx, hy, 0, hx, hy, 22);
+      corona.addColorStop(0, 'rgba(255,255,255,0.0)');
+      corona.addColorStop(0.3, 'rgba(180,190,255,' + (0.10 * cometAlpha) + ')');
+      corona.addColorStop(0.6, 'rgba(99,102,241,' + (0.18 * cometAlpha) + ')');
+      corona.addColorStop(1, 'rgba(99,102,241,0)');
+      ctx.beginPath(); ctx.arc(hx, hy, 22, 0, Math.PI * 2);
+      ctx.fillStyle = corona; ctx.fill();
+
+      var mid = ctx.createRadialGradient(hx, hy, 0, hx, hy, 9);
+      mid.addColorStop(0, 'rgba(255,255,255,' + (0.95 * cometAlpha) + ')');
+      mid.addColorStop(0.4, 'rgba(200,210,255,' + (0.85 * cometAlpha) + ')');
+      mid.addColorStop(0.75, 'rgba(99,102,241,' + (0.55 * cometAlpha) + ')');
+      mid.addColorStop(1, 'rgba(99,102,241,0)');
+      ctx.beginPath(); ctx.arc(hx, hy, 9, 0, Math.PI * 2);
+      ctx.fillStyle = mid; ctx.fill();
+
+      ctx.beginPath(); ctx.arc(hx, hy, 2.8, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255,255,255,' + cometAlpha + ')'; ctx.fill();
+    }
+
+    // ── main loop ─────────────────────────────────────────────────────────────────
+    var last = performance.now();
+
+    function frame(now) {
+      var dt = Math.min(now - last, 50);
+      last = now;
+
+      positionCardEl();
+      ctx.clearRect(0, 0, W, H);
+
+      var glow = getNodeGlow();
+
+      drawEdge();
+      drawSource();
+      drawCardGlow(glow);
+      drawDestNode(glow);
+      drawEnergyEvents(dt);
+      drawComet(dt);
+
+      requestAnimationFrame(frame);
+    }
+
+    requestAnimationFrame(frame);
+
+    window.addEventListener('resize', function () {
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      resize();
+      trail.length = 0;
+    });
+  </script>
+</body>
+
+</html>

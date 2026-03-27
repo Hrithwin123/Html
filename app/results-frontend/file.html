@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=Geist+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-tertiary-fixed-variant": "#e2e2e2",
+              "surface-container-low": "#f3f4f5",
+              "secondary": "#555f6d",
+              "inverse-surface": "#2e3132",
+              "surface-container-high": "#e7e8e9",
+              "tertiary-fixed-dim": "#474747",
+              "error-container": "#ffdad6",
+              "surface-container-highest": "#e1e3e4",
+              "on-tertiary-fixed": "#ffffff",
+              "surface": "#f8f9fa",
+              "on-error": "#ffffff",
+              "surface-variant": "#e1e3e4",
+              "secondary-fixed-dim": "#a2acbc",
+              "on-secondary": "#ffffff",
+              "on-error-container": "#410002",
+              "on-secondary-fixed": "#121c28",
+              "on-secondary-container": "#121c28",
+              "surface-dim": "#d9dadb",
+              "on-surface": "#191c1d",
+              "inverse-primary": "#c6c6c6",
+              "surface-container": "#edeeef",
+              "tertiary-container": "#747474",
+              "on-primary": "#e2e2e2",
+              "outline": "#777777",
+              "on-secondary-fixed-variant": "#323c49",
+              "on-primary-fixed-variant": "#e2e2e2",
+              "surface-container-lowest": "#ffffff",
+              "on-primary-fixed": "#ffffff",
+              "tertiary": "#3b3b3b",
+              "tertiary-fixed": "#5e5e5e",
+              "on-surface-variant": "#474747",
+              "primary-container": "#3b3b3b",
+              "outline-variant": "#c6c6c6",
+              "secondary-container": "#cbd5e6",
+              "background": "#f8f9fa",
+              "on-tertiary": "#e2e2e2",
+              "primary-fixed-dim": "#474747",
+              "secondary-fixed": "#bdc7d8",
+              "error": "#ba1a1a",
+              "primary-fixed": "#5e5e5e",
+              "primary": "#000000",
+              "surface-bright": "#f8f9fa",
+              "on-background": "#191c1d",
+              "inverse-on-surface": "#f0f1f2",
+              "on-tertiary-container": "#ffffff",
+              "on-primary-container": "#ffffff",
+              "surface-tint": "#5e5e5e"
+            },
+            fontFamily: {
+              "headline": ["Inter"],
+              "body": ["Inter"],
+              "label": ["Inter"],
+              "mono": ["Geist Mono"]
+            },
+            borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .dot-grid {
+            background-image: radial-gradient(circle, #e2e2e2 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+        .gradient-text {
+            background: linear-gradient(to right, #6366f1, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body selection:bg-indigo-100 selection:text-indigo-900 overflow-x-hidden">
+<!-- TopAppBar -->
+<header class="bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md text-zinc-900 dark:text-zinc-50 font-sans tracking-tight docked full-width top-0 sticky z-50">
+<div class="flex justify-between items-center px-8 h-16 w-full max-w-7xl mx-auto">
+<div class="flex items-center gap-8">
+<span class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-purple-500">Persona Labs</span>
+<nav class="hidden md:flex gap-6">
+<a class="text-zinc-500 dark:text-zinc-400 font-medium hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors" href="#">Simulations</a>
+<a class="text-zinc-900 dark:text-zinc-50 font-semibold border-b-2 border-indigo-500 transition-colors" href="#">Intelligence</a>
+<a class="text-zinc-500 dark:text-zinc-400 font-medium hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors" href="#">Library</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined text-zinc-500 p-2 rounded-full hover:bg-surface-container transition-all" data-icon="notifications"></button>
+<button class="material-symbols-outlined text-zinc-500 p-2 rounded-full hover:bg-surface-container transition-all" data-icon="settings"></button>
+<img alt="User profile avatar" class="w-8 h-8 rounded-full border border-surface-variant object-cover" data-alt="Modern high-fashion portrait of a creative professional woman with soft lighting and minimalist aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAzjjMhW5A-8-sod9fDnb8dc-A0D4RT05oj89gZsWQfn_S4ZgTlSOpSOo3u3NCT-qU6OHT_UU7YBqTv182VNZ9aa4JuKTtHhun_bcOBUWL5SobqdPSVAvwcq7CvJd5k_c2X-5iI3-SqwINK47uWrqUlbC3MyI6hj1CeLStCW0sU9fxKNJO5axQ27NYBfT23SQE5Rod7wgUYMHABxtkGnyrtg6vdwCofxBwHFsSzckPuvVZmhHSZQsGsOgKUcTUHCTB7w4vLrOKJqOsF"/>
+</div>
+</div>
+</header>
+<main class="dot-grid min-h-screen pt-12 pb-32 px-6">
+<div class="max-w-7xl mx-auto">
+<!-- Page Header -->
+<div class="mb-16">
+<h1 class="text-5xl md:text-6xl font-extrabold tracking-tighter mb-4">
+                    Simulation <span class="gradient-text">Results</span>
+</h1>
+<p class="text-on-surface-variant text-xl max-w-2xl font-medium leading-relaxed">
+                    Analyzing the trajectory of market adoption through neural persona simulations.
+                </p>
+</div>
+<!-- Section 1: Simulation Results -->
+<section class="mb-20">
+<div class="flex items-center gap-4 mb-8">
+<div class="h-8 w-1 bg-indigo-500 rounded-full"></div>
+<h2 class="text-3xl font-bold tracking-tight">Market Dynamics</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-12 gap-8">
+<!-- S-Curve Visualization -->
+<div class="md:col-span-8 bg-white rounded-2xl p-8 border border-surface-container-high transition-shadow hover:shadow-xl">
+<div class="flex justify-between items-start mb-12">
+<div>
+<h3 class="text-xl font-bold text-primary mb-1">Adoption S-Curve</h3>
+<p class="text-on-surface-variant text-sm font-mono uppercase tracking-widest">Growth Velocity Analysis</p>
+</div>
+<span class="bg-indigo-50 text-indigo-600 text-xs font-bold px-3 py-1 rounded-full">+24% MoM</span>
+</div>
+<div class="h-[300px] w-full relative">
+<!-- SVG Placeholder for S-Curve -->
+<svg class="w-full h-full overflow-visible" viewbox="0 0 800 300">
+<path d="M0,280 Q200,280 400,150 T800,20" fill="none" stroke="url(#indigoGradient)" stroke-linecap="round" stroke-width="4"></path>
+<defs>
+<lineargradient id="indigoGradient" x1="0" x2="1" y1="0" y2="0">
+<stop offset="0%" stop-color="#6366f1"></stop>
+<stop offset="100%" stop-color="#a855f7"></stop>
+</lineargradient>
+</defs>
+<!-- Data points -->
+<circle cx="400" cy="150" fill="white" r="6" stroke="#6366f1" stroke-width="3"></circle>
+<text class="font-mono text-[10px] fill-zinc-400" x="410" y="140">CRITICAL INFLECTION</text>
+</svg>
+</div>
+</div>
+<!-- Weekly Bar Chart -->
+<div class="md:col-span-4 bg-white rounded-2xl p-8 border border-surface-container-high transition-shadow hover:shadow-xl">
+<h3 class="text-xl font-bold text-primary mb-1">New Adopters</h3>
+<p class="text-on-surface-variant text-sm font-mono uppercase tracking-widest mb-8">Weekly Velocity</p>
+<div class="flex items-end justify-between h-[200px] gap-2">
+<div class="w-full bg-amber-100 rounded-t-lg transition-all hover:bg-amber-400" style="height: 40%"></div>
+<div class="w-full bg-amber-100 rounded-t-lg transition-all hover:bg-amber-400" style="height: 60%"></div>
+<div class="w-full bg-amber-200 rounded-t-lg transition-all hover:bg-amber-400" style="height: 55%"></div>
+<div class="w-full bg-amber-300 rounded-t-lg transition-all hover:bg-amber-400" style="height: 85%"></div>
+<div class="w-full bg-amber-400 rounded-t-lg transition-all hover:bg-amber-400" style="height: 70%"></div>
+<div class="w-full bg-amber-500 rounded-t-lg transition-all hover:bg-amber-400" style="height: 95%"></div>
+</div>
+<div class="flex justify-between mt-4 font-mono text-[10px] text-zinc-400">
+<span>W12</span><span>W13</span><span>W14</span><span>W15</span><span>W16</span><span>W17</span>
+</div>
+</div>
+<!-- Social Network Bubble Map -->
+<div class="md:col-span-12 lg:col-span-7 bg-white rounded-2xl p-8 border border-surface-container-high overflow-hidden relative">
+<div class="relative z-10 mb-8">
+<h3 class="text-xl font-bold text-primary mb-1">Social Network</h3>
+<p class="text-on-surface-variant text-sm font-mono uppercase tracking-widest">Final State Connection Map</p>
+</div>
+<div class="h-[400px] w-full flex items-center justify-center">
+<!-- Visual Bubble Map with Images -->
+<div class="relative w-full h-full">
+<div class="absolute top-1/4 left-1/4 w-32 h-32 rounded-full bg-indigo-50 border border-indigo-200 flex items-center justify-center animate-pulse">
+<img class="w-16 h-16 rounded-full border-4 border-white shadow-lg" data-alt="Close up portrait of a middle-aged tech executive with glasses in a professional studio setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDAzfn6Y-WrYTSwUgAhffzR5VmVTvkv1cqKltGvEim7Ox_hKEZx_D8kDlNfGzYTL5HoE1reAKcEOnKvXgHOCzBXEsqF3_xUa-pV49UD6AJRx0Jomc0pIf4OCscu-liT93dEAOyGvsBkeWZd-Qo-Ge0SHydvA48LUUMGx6_3BCPHj74i0eza7pkVwqLodfXIxF2T-63ijJ575qlJD9CzdNchQK9dlXKLPz4BMjYY2mZZGb3HF_fncA6SuWdvCaSVpxx0ftQuF51Xehcf"/>
+</div>
+<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full bg-purple-50 border border-purple-200 flex items-center justify-center">
+<img class="w-24 h-24 rounded-full border-4 border-white shadow-xl" data-alt="Studio portrait of a young Gen-Z woman with vibrant accessories and confident expression on a clean pastel background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBMnKjF9TcSdlRbDvUfpeOtFTspy0WjPOLRgtUlIMrF_UXG9ClvWR8hQYYOiTLO-r74vnQl1aGxjoyLRtoDoJgOCGkXgUwuHsWX_zslXjpkZEYfnD3qgbiUCsyz73kcrHOpNmd0n0vaBfR37ba3F4CX-dSpxypWaUD5vM2-NrIt9UDs0UxxM_K_ot0NWB-HNVdcQRIi66Hq7MI-CQ7dx8WHFws7XnVUZIE0jzFSkIkAnkSEutJAaVOk0MVLPRj-twx0rFXQkZgChcsy"/>
+</div>
+<div class="absolute bottom-1/4 right-1/4 w-28 h-28 rounded-full bg-orange-50 border border-orange-200 flex items-center justify-center">
+<img class="w-14 h-14 rounded-full border-4 border-white shadow-md" data-alt="Portrait of an older distinguished gentleman with grey hair in a minimalist architectural environment" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDKGQV2JYw8lI2HpZpZS5D_ijEh38bLLaVJK_s7Zsmf1tK9lzEAGN04ZNkXpUdQOpU72fqLpFeEiw--hXGnLPZ6zYkvfb-97W6J_DMq0Jl0bcBlUnA5Z_uNne4Ap2VEwpHknydmz6UREUfP-oVCwQan_MJHVpC0Mmd-7mdKWIjSU8WM34Mb3J_W8gf8xgdWln70e-Tt0Wf5PJMT4IwYTavOJ7aBhGq7dUgKWDolkIzE8T5PnF10swbQ0mlg5Z9UFlY4gYktkef5ysH-"/>
+</div>
+<!-- Connection Lines (SVG) -->
+<svg class="absolute inset-0 w-full h-full opacity-20" stroke="currentColor">
+<line class="text-indigo-400" stroke-width="2" x1="25%" x2="50%" y1="25%" y2="50%"></line>
+<line class="text-purple-400" stroke-width="2" x1="50%" x2="75%" y1="50%" y2="75%"></line>
+</svg>
+</div>
+</div>
+</div>
+<!-- Top Influencers Table -->
+<div class="md:col-span-12 lg:col-span-5 bg-white rounded-2xl p-8 border border-surface-container-high">
+<h3 class="text-xl font-bold text-primary mb-1">Top Influencers</h3>
+<p class="text-on-surface-variant text-sm font-mono uppercase tracking-widest mb-8">Node Impact Ranking</p>
+<div class="space-y-6">
+<div class="flex items-center justify-between group">
+<div class="flex items-center gap-4">
+<img class="w-10 h-10 rounded-full object-cover" data-alt="Modern professional headshot of a young male designer in a neutral colored shirt with natural lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAaSa4Ju-1Ti3y7JEqYboKxjd38lZsQQOy7ny7eNlDmSOIXxTgCu3huHwIerCSX-MCPNfht5D9ac81NoeMyGhHnQ_BmxIug-8ubdLCUkmjLIzAOzq6OIxzHHDzTMKqWhinBLYZgQPKnx-vMSyTUfpTAKY-xGQk1gfR2UeG_DY2AY6mX4MUo7vbMk9lH1E4Vx4R5OlnZBfzZjNbhedDDwiQfSqe0gWHtzFFv3ynithaMZxRwkW69JlHcQK2VWH3wj3t492VBfqMQNaXc"/>
+<div>
+<p class="font-bold text-zinc-900">Marcus Thorne</p>
+<p class="text-xs text-zinc-400">Tech Early Adopter</p>
+</div>
+</div>
+<span class="text-indigo-600 font-mono text-sm font-bold">9.8/10</span>
+</div>
+<div class="flex items-center justify-between group">
+<div class="flex items-center gap-4">
+<img class="w-10 h-10 rounded-full object-cover" data-alt="Cheerful portrait of a young woman with a warm smile in a brightly lit office space" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD-xrqmsPtHPrZPBUuw9DkSGKC7JP_OiinJNly1k4nqYEK9k81wvMS967eeBB_NhZvnaSHUMkXtiKQjoBW2p6gOeJtr3crr6GjwblAZdFm1nM-XjPX4QDJI7DABUe9msj6VL0e4FoZ3ciB0_n9mPrpKBaHBjFY-bgi4w9wIHsXd7ne54jgWZE1ieOWZYOKgNvfJbJcMsGIbokv8uhnOyAxss4fgYrF9Oig7-9wG3F5mqwkN0X9K4vOVAobU0wMp8FNsq5QpnDUng7LG"/>
+<div>
+<p class="font-bold text-zinc-900">Sarah Chen</p>
+<p class="text-xs text-zinc-400">Creative Lead</p>
+</div>
+</div>
+<span class="text-indigo-600 font-mono text-sm font-bold">9.2/10</span>
+</div>
+<div class="flex items-center justify-between group">
+<div class="flex items-center gap-4">
+<img class="w-10 h-10 rounded-full object-cover" data-alt="Portrait of a professional man in high-quality business casual attire with soft background bokeh" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDKbUDKKKRzG9Jd4ydjCe_DDAKJZzkzdOBHXqT8ii8Zwp-StzPNRhRIwot9hLtC1ZkVr-J8pzgShkwPJ_0kPs3NZNoSCmop7mwg1vS6BhLLvT1kXj71o0uKnWeEtTvnG3s3hBgYiXCoGeJeXRP8bZMs8vFlHhMDHmyRtZxVRc9Q16Hcz71im8mK-WrRuL5E88fqnv6y-8P9TGeM2aHjQAbQKi9bkYv7TN-uwQzI87OS2c1t8AdI7Kjw_8wjcSoc69ax-eAU5886HIQh"/>
+<div>
+<p class="font-bold text-zinc-900">Julian Vance</p>
+<p class="text-xs text-zinc-400">Marketing Strategist</p>
+</div>
+</div>
+<span class="text-indigo-600 font-mono text-sm font-bold">8.7/10</span>
+</div>
+</div>
+</div>
+<!-- Adoption % by Segment -->
+<div class="md:col-span-12 bg-white rounded-2xl p-8 border border-surface-container-high">
+<h3 class="text-xl font-bold text-primary mb-8">Adoption % by Segment</h3>
+<div class="grid grid-cols-1 md:grid-cols-4 gap-12">
+<div class="space-y-3">
+<div class="flex justify-between font-mono text-xs">
+<span>INNOVATORS</span>
+<span class="text-indigo-600">98%</span>
+</div>
+<div class="w-full h-3 bg-zinc-100 rounded-full overflow-hidden">
+<div class="h-full bg-indigo-500 w-[98%] rounded-full"></div>
+</div>
+</div>
+<div class="space-y-3">
+<div class="flex justify-between font-mono text-xs">
+<span>EARLY ADOPTERS</span>
+<span class="text-indigo-600">84%</span>
+</div>
+<div class="w-full h-3 bg-zinc-100 rounded-full overflow-hidden">
+<div class="h-full bg-indigo-400 w-[84%] rounded-full"></div>
+</div>
+</div>
+<div class="space-y-3">
+<div class="flex justify-between font-mono text-xs">
+<span>EARLY MAJORITY</span>
+<span class="text-indigo-600">42%</span>
+</div>
+<div class="w-full h-3 bg-zinc-100 rounded-full overflow-hidden">
+<div class="h-full bg-indigo-300 w-[42%] rounded-full"></div>
+</div>
+</div>
+<div class="space-y-3">
+<div class="flex justify-between font-mono text-xs">
+<span>LATE MAJORITY</span>
+<span class="text-indigo-600">12%</span>
+</div>
+<div class="w-full h-3 bg-zinc-100 rounded-full overflow-hidden">
+<div class="h-full bg-indigo-200 w-[12%] rounded-full"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 2: Adoption Intelligence -->
+<section class="mb-20">
+<div class="flex items-center gap-4 mb-8">
+<div class="h-8 w-1 bg-purple-500 rounded-full"></div>
+<h2 class="text-3xl font-bold tracking-tight">Adoption Intelligence</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+<!-- Why They Adopted -->
+<div class="bg-white rounded-2xl p-8 border border-surface-container-high flex flex-col h-full relative overflow-hidden">
+<div class="absolute top-0 right-0 w-24 h-24 bg-green-50 rounded-bl-full -mr-8 -mt-8 opacity-40"></div>
+<h4 class="text-lg font-bold mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-green-500" data-icon="check_circle"></span>
+                            Why They Adopted
+                        </h4>
+<ul class="space-y-6 flex-grow">
+<li class="flex gap-4">
+<span class="font-mono text-zinc-300 text-xl font-bold">01</span>
+<div>
+<p class="font-semibold text-sm">Automated Efficiency</p>
+<span class="text-xs text-zinc-400">1.2k counts</span>
+</div>
+</li>
+<li class="flex gap-4">
+<span class="font-mono text-zinc-300 text-xl font-bold">02</span>
+<div>
+<p class="font-semibold text-sm">Competitive Advantage</p>
+<span class="text-xs text-zinc-400">840 counts</span>
+</div>
+</li>
+<li class="flex gap-4">
+<span class="font-mono text-zinc-300 text-xl font-bold">03</span>
+<div>
+<p class="font-semibold text-sm">Seamless Integration</p>
+<span class="text-xs text-zinc-400">650 counts</span>
+</div>
+</li>
+</ul>
+</div>
+<!-- Why They Didn't -->
+<div class="bg-white rounded-2xl p-8 border border-surface-container-high flex flex-col h-full relative overflow-hidden">
+<div class="absolute top-0 right-0 w-24 h-24 bg-red-50 rounded-bl-full -mr-8 -mt-8 opacity-40"></div>
+<h4 class="text-lg font-bold mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-red-500" data-icon="cancel"></span>
+                            Why They Didn't
+                        </h4>
+<ul class="space-y-6 flex-grow">
+<li class="flex gap-4">
+<span class="font-mono text-red-200 text-xl font-bold">01</span>
+<div>
+<p class="font-semibold text-sm text-red-700">Complex Onboarding</p>
+<span class="font-mono text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded uppercase">Blocked</span>
+</div>
+</li>
+<li class="flex gap-4">
+<span class="font-mono text-red-200 text-xl font-bold">02</span>
+<div>
+<p class="font-semibold text-sm text-red-700">Cost Prohibitive</p>
+<span class="font-mono text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded uppercase">Blocked</span>
+</div>
+</li>
+<li class="flex gap-4">
+<span class="font-mono text-red-200 text-xl font-bold">03</span>
+<div>
+<p class="font-semibold text-sm text-red-700">Data Privacy Concerns</p>
+<span class="font-mono text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded uppercase">Blocked</span>
+</div>
+</li>
+</ul>
+</div>
+<!-- What Would Convert Them -->
+<div class="bg-white rounded-2xl p-8 border border-surface-container-high flex flex-col h-full relative overflow-hidden">
+<div class="absolute top-0 right-0 w-24 h-24 bg-blue-50 rounded-bl-full -mr-8 -mt-8 opacity-40"></div>
+<h4 class="text-lg font-bold mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-blue-500" data-icon="lightbulb"></span>
+                            What Would Convert
+                        </h4>
+<ul class="space-y-6 flex-grow">
+<li class="flex gap-4">
+<span class="font-mono text-blue-200 text-xl font-bold">01</span>
+<p class="font-semibold text-sm text-blue-700">Freemium Tier Offering</p>
+</li>
+<li class="flex gap-4">
+<span class="font-mono text-blue-200 text-xl font-bold">02</span>
+<p class="font-semibold text-sm text-blue-700">Localized Compliance</p>
+</li>
+<li class="flex gap-4">
+<span class="font-mono text-blue-200 text-xl font-bold">03</span>
+<p class="font-semibold text-sm text-blue-700">Enhanced Reporting</p>
+</li>
+</ul>
+</div>
+</div>
+<!-- Objections Table -->
+<div class="bg-white rounded-2xl p-8 border border-surface-container-high">
+<h3 class="text-xl font-bold text-primary mb-8">Objections by Segment</h3>
+<div class="overflow-x-auto">
+<table class="w-full border-collapse">
+<thead>
+<tr class="text-left font-mono text-xs text-zinc-400 border-b border-zinc-100">
+<th class="pb-4 font-normal">SEGMENT</th>
+<th class="pb-4 font-normal">PRIMARY OBJECTION</th>
+<th class="pb-4 font-normal">SENTIMENT SCORE</th>
+<th class="pb-4 font-normal">CONVERSION POTENTIAL</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-zinc-50">
+<tr>
+<td class="py-6 font-bold text-sm">Tech Skeptics</td>
+<td class="py-6 text-sm">Relies too much on proprietary AI</td>
+<td class="py-6">
+<div class="flex gap-1">
+<div class="w-2 h-2 rounded-full bg-red-400"></div>
+<div class="w-2 h-2 rounded-full bg-zinc-200"></div>
+<div class="w-2 h-2 rounded-full bg-zinc-200"></div>
+</div>
+</td>
+<td class="py-6 text-xs font-mono">LOW</td>
+</tr>
+<tr>
+<td class="py-6 font-bold text-sm">Budget Conscious</td>
+<td class="py-6 text-sm">Lack of yearly tiered pricing</td>
+<td class="py-6">
+<div class="flex gap-1">
+<div class="w-2 h-2 rounded-full bg-orange-400"></div>
+<div class="w-2 h-2 rounded-full bg-orange-400"></div>
+<div class="w-2 h-2 rounded-full bg-zinc-200"></div>
+</div>
+</td>
+<td class="py-6 text-xs font-mono">MEDIUM</td>
+</tr>
+<tr>
+<td class="py-6 font-bold text-sm">Legacy Systems</td>
+<td class="py-6 text-sm">Database migration friction</td>
+<td class="py-6">
+<div class="flex gap-1">
+<div class="w-2 h-2 rounded-full bg-orange-400"></div>
+<div class="w-2 h-2 rounded-full bg-zinc-200"></div>
+<div class="w-2 h-2 rounded-full bg-zinc-200"></div>
+</div>
+</td>
+<td class="py-6 text-xs font-mono">HIGH</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<!-- Section 3: Inner Thoughts -->
+<section class="mb-32">
+<div class="flex items-center gap-4 mb-8">
+<div class="h-8 w-1 bg-zinc-900 rounded-full"></div>
+<h2 class="text-3xl font-bold tracking-tight">Persona Narratives</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<!-- Adopter Thoughts -->
+<div class="space-y-6">
+<h4 class="text-sm font-mono uppercase tracking-widest text-green-600 flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-green-500"></span>
+                            Adopter Inner Thoughts
+                        </h4>
+<div class="bg-white rounded-2xl p-6 border-l-4 border-l-green-500 border-y border-r border-zinc-100 shadow-sm">
+<p class="italic text-zinc-600 mb-4 leading-relaxed">"The initial setup was surprisingly fast. I was worried about the learning curve, but the UI felt intuitive right away. It's already saving me 4 hours a week."</p>
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center font-mono text-xs">P1</div>
+<span class="text-xs font-bold">Tech Enthusiast Persona</span>
+</div>
+</div>
+<div class="bg-white rounded-2xl p-6 border-l-4 border-l-green-500 border-y border-r border-zinc-100 shadow-sm">
+<p class="italic text-zinc-600 mb-4 leading-relaxed">"Honestly, the collaborative features are what sold me. Being able to see cross-team results in real-time changed our workflow overnight."</p>
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center font-mono text-xs">P4</div>
+<span class="text-xs font-bold">Team Lead Persona</span>
+</div>
+</div>
+</div>
+<!-- Non-Adopter Thoughts -->
+<div class="space-y-6">
+<h4 class="text-sm font-mono uppercase tracking-widest text-red-600 flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-red-500"></span>
+                            Non-Adopter Inner Thoughts
+                        </h4>
+<div class="bg-white rounded-2xl p-6 border-l-4 border-l-red-500 border-y border-r border-zinc-100 shadow-sm">
+<p class="italic text-zinc-600 mb-4 leading-relaxed">"It looks pretty, but I'm not convinced about the security measures. In our industry, we can't afford to take chances with cloud-based simulation data."</p>
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center font-mono text-xs">P2</div>
+<span class="text-xs font-bold">Security Compliance Persona</span>
+</div>
+</div>
+<div class="bg-white rounded-2xl p-6 border-l-4 border-l-red-500 border-y border-r border-zinc-100 shadow-sm">
+<p class="italic text-zinc-600 mb-4 leading-relaxed">"The price tag is just too high for our current scale. We need something more entry-level before we can justify an enterprise solution like this."</p>
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center font-mono text-xs">P9</div>
+<span class="text-xs font-bold">Small Business Persona</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 right-0 z-50 flex justify-center pb-4">
+<div class="bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl rounded-full mb-6 mx-auto w-fit shadow-[0px_20px_40px_rgba(0,0,0,0.06)] flex gap-2 p-2 border border-white/50">
+<a class="flex flex-col items-center justify-center text-zinc-500 dark:text-zinc-400 w-12 h-12 hover:scale-110 transition-transform duration-300 ease-out" href="#">
+<span class="material-symbols-outlined" data-icon="explore"></span>
+</a>
+<a class="flex flex-col items-center justify-center bg-zinc-900 dark:bg-zinc-50 text-white dark:text-zinc-900 rounded-full w-12 h-12 hover:scale-110 transition-transform duration-300 ease-out" href="#">
+<span class="material-symbols-outlined" data-icon="analytics" style="font-variation-settings: 'FILL' 1;"></span>
+</a>
+<a class="flex flex-col items-center justify-center text-zinc-500 dark:text-zinc-400 w-12 h-12 hover:scale-110 transition-transform duration-300 ease-out" href="#">
+<span class="material-symbols-outlined" data-icon="history"></span>
+</a>
+<a class="flex flex-col items-center justify-center text-zinc-500 dark:text-zinc-400 w-12 h-12 hover:scale-110 transition-transform duration-300 ease-out" href="#">
+<span class="material-symbols-outlined" data-icon="person"></span>
+</a>
+</div>
+</nav>
+</body></html>

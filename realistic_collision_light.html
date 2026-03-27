@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    body {
+      background: #f5f4f0
+    }
+
+    #wrap {
+      position: relative;
+      width: 100%;
+      height: 340px;
+      background: #f5f4f0;
+      border-radius: 14px;
+      overflow: hidden
+    }
+
+    canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%
+    }
+
+    #node-card {
+      position: absolute;
+      width: 120px;
+      height: 148px;
+      border-radius: 16px;
+      background: #fff;
+      border: 1.5px solid rgba(30, 30, 30, 0.22);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      pointer-events: none;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
+      transition: transform 0.05s
+    }
+
+    #node-card .avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.07);
+      border: 2px solid rgba(0, 0, 0, 0.18)
+    }
+
+    #node-card .line1 {
+      width: 64px;
+      height: 7px;
+      background: rgba(0, 0, 0, 0.12);
+      border-radius: 4px
+    }
+
+    #node-card .line2 {
+      width: 48px;
+      height: 5px;
+      background: rgba(0, 0, 0, 0.07);
+      border-radius: 4px
+    }
+
+    #controls {
+      position: absolute;
+      bottom: 14px;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      gap: 10px
+    }
+
+    #controls button {
+      font-size: 12px;
+      padding: 5px 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(0, 0, 0, 0.18);
+      background: rgba(255, 255, 255, 0.7);
+      color: rgba(0, 0, 0, 0.55);
+      cursor: pointer
+    }
+
+    #controls button:hover {
+      background: rgba(255, 255, 255, 0.95)
+    }
+
+    #controls button.active {
+      border-color: rgba(20, 20, 20, 0.7);
+      color: #111;
+      background: #fff
+    }
+  </style>
+</head>
+
+<body>
+  <div id="wrap">
+    <canvas id="c"></canvas>
+    <div id="node-card">
+      <div class="avatar"></div>
+      <div class="line1"></div>
+      <div class="line2"></div>
+    </div>
+    <div id="controls">
+      <button id="btn-card" class="active">Card node</button>
+      <button id="btn-circle">Circle node</button>
+    </div>
+  </div>
+  <script>
+    var wrap = document.getElementById('wrap');
+    var canvas = document.getElementById('c');
+    var ctx = canvas.getContext('2d');
+    var card = document.getElementById('node-card');
+    var btnCard = document.getElementById('btn-card');
+    var btnCircle = document.getElementById('btn-circle');
+
+    var W, H, nodeType = 'card';
+    var CARD_W = 120, CARD_H = 148, CARD_R = 16, CIRC_R = 22;
+
+    // Recoil state
+    var recoil = { x: 0, y: 0, vx: 0, vy: 0 };
+
+    function resize() {
+      var r = wrap.getBoundingClientRect();
+      W = r.width; H = r.height;
+      canvas.width = W * devicePixelRatio;
+      canvas.height = H * devicePixelRatio;
+      canvas.style.width = W + 'px';
+      canvas.style.height = H + 'px';
+      ctx.scale(devicePixelRatio, devicePixelRatio);
+    }
+    resize();
+
+    btnCard.onclick = function () { nodeType = 'card'; btnCard.classList.add('active'); btnCircle.classList.remove('active'); };
+    btnCircle.onclick = function () { nodeType = 'circle'; btnCircle.classList.add('active'); btnCard.classList.remove('active'); };
+
+    function nodePos() { return { x: W * 0.72 + recoil.x, y: H * 0.5 + recoil.y }; }
+    function srcPos() { return { x: W * 0.12, y: H * 0.5 }; }
+
+    function positionCardEl() {
+      var n = nodePos();
+      card.style.left = (n.x - CARD_W / 2) + 'px';
+      card.style.top = (n.y - CARD_H / 2) + 'px';
+      card.style.display = nodeType === 'card' ? 'flex' : 'none';
+    }
+
+    // ── particles ─────────────────────────────────────────────
+    var particles = [];
+
+    function spawnCollision(impactAngle, ix, iy) {
+      // Recoil: push node away from impact
+      var recoilForce = 3.2;
+      recoil.vx += Math.cos(impactAngle + Math.PI) * recoilForce;
+      recoil.vy += Math.sin(impactAngle + Math.PI) * recoilForce;
+
+      // 1. Primary shards — low count, high mass, realistic angles
+      //    They bounce off the surface (angle of incidence ~= angle of reflection)
+      var surfaceNormal = impactAngle + Math.PI; // normal points away from node center
+      for (var i = 0; i < 7; i++) {
+        // Reflect off surface with slight scatter
+        var scatter = (Math.random() - 0.5) * 0.9;
+        var a = surfaceNormal + scatter;
+        var spd = 1.8 + Math.random() * 3.5;
+        particles.push({
+          x: ix, y: iy,
+          vx: Math.cos(a) * spd, vy: Math.sin(a) * spd,
+          ay: 0.055, ax: 0,
+          size: 1.2 + Math.random() * 1.8,
+          alpha: 0.9,
+          life: 380 + Math.random() * 280, maxLife: 660,
+          type: 'shard',
+          tail: [], tailMax: 6 + Math.floor(Math.random() * 5)
+        });
+      }
+
+      // 2. Fine dust — stays close to impact, fades fast
+      for (var j = 0; j < 22; j++) {
+        var a2 = surfaceNormal + (Math.random() - 0.5) * 1.1;
+        var spd2 = 0.3 + Math.random() * 1.6;
+        particles.push({
+          x: ix + (Math.random() - 0.5) * 4,
+          y: iy + (Math.random() - 0.5) * 4,
+          vx: Math.cos(a2) * spd2, vy: Math.sin(a2) * spd2,
+          ay: 0.018, ax: 0,
+          size: 0.5 + Math.random() * 1.0,
+          alpha: 0.6 + Math.random() * 0.3,
+          life: 120 + Math.random() * 160, maxLife: 280,
+          type: 'dust',
+          tail: [], tailMax: 0
+        });
+      }
+
+      // 3. A few scrapers — travel along the surface tangent, like chips scraping off
+      var tangent = impactAngle + Math.PI / 2;
+      for (var k = 0; k < 4; k++) {
+        var dir = k < 2 ? 1 : -1;
+        var spd3 = 1.5 + Math.random() * 2.2;
+        var a3 = tangent * dir + (Math.random() - 0.5) * 0.25;
+        particles.push({
+          x: ix, y: iy,
+          vx: Math.cos(a3) * spd3 * dir, vy: Math.sin(a3) * spd3 * dir,
+          ay: 0.04, ax: 0,
+          size: 0.9 + Math.random() * 1.2,
+          alpha: 0.75,
+          life: 300 + Math.random() * 200, maxLife: 500,
+          type: 'scraper',
+          tail: [], tailMax: 9
+        });
+      }
+
+      // 4. Flash — white-out at impact point (single short-lived big dot)
+      particles.push({
+        x: ix, y: iy, vx: 0, vy: 0, ax: 0, ay: 0,
+        size: 10, alpha: 0.55,
+        life: 90, maxLife: 90,
+        type: 'flash', tail: [], tailMax: 0
+      });
+    }
+
+    function updateParticles(dt) {
+      for (var i = particles.length - 1; i >= 0; i--) {
+        var p = particles[i];
+        if (p.tailMax > 0) {
+          p.tail.unshift({ x: p.x, y: p.y });
+          if (p.tail.length > p.tailMax) p.tail.pop();
+        }
+        p.vx += p.ax;
+        p.vy += p.ay;
+        p.vx *= 0.978;
+        p.vy *= 0.978;
+        p.x += p.vx * (dt / 16);
+        p.y += p.vy * (dt / 16);
+        p.life -= dt;
+        if (p.life <= 0) { particles.splice(i, 1); }
+      }
+    }
+
+    function drawParticles() {
+      for (var i = 0; i < particles.length; i++) {
+        var p = particles[i];
+        var frac = Math.max(0, p.life / p.maxLife);
+
+        if (p.type === 'flash') {
+          var fa = p.alpha * frac;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size * (1 - frac * 0.5), 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(0,0,0,' + fa + ')';
+          ctx.fill();
+          continue;
+        }
+
+        if (p.type === 'dust') {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size * frac, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(0,0,0,' + (p.alpha * frac * frac) + ')';
+          ctx.fill();
+          continue;
+        }
+
+        // shard / scraper — draw tail then dot
+        var ease = frac * frac;
+        for (var t = 1; t < p.tail.length; t++) {
+          var tf = 1 - t / p.tail.length;
+          ctx.beginPath();
+          ctx.moveTo(p.tail[t - 1].x, p.tail[t - 1].y);
+          ctx.lineTo(p.tail[t].x, p.tail[t].y);
+          ctx.strokeStyle = 'rgba(0,0,0,' + (ease * tf * 0.5) + ')';
+          ctx.lineWidth = p.size * tf * 0.8;
+          ctx.lineCap = 'round';
+          ctx.stroke();
+        }
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size * Math.min(frac * 1.5, 1), 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0,0,0,' + (p.alpha * ease) + ')';
+        ctx.fill();
+      }
+    }
+
+    // ── edge ──────────────────────────────────────────────────
+    function drawEdge() {
+      var s = srcPos(), n = nodePos();
+      ctx.beginPath();
+      ctx.moveTo(s.x, s.y);
+      ctx.lineTo(n.x, n.y);
+      ctx.strokeStyle = 'rgba(0,0,0,0.13)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
+    function drawSource() {
+      var s = srcPos();
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, 18, 0, Math.PI * 2);
+      ctx.fillStyle = '#fff';
+      ctx.strokeStyle = 'rgba(0,0,0,0.25)';
+      ctx.lineWidth = 1.5;
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = 'rgba(0,0,0,0.65)';
+      ctx.font = '600 13px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('A', s.x, s.y);
+    }
+
+    // node border impact flash
+    var borderFlash = 0;
+
+    function drawDestNode() {
+      var n = nodePos();
+      var bf = Math.max(0, borderFlash);
+      if (nodeType === 'circle') {
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, CIRC_R, 0, Math.PI * 2);
+        ctx.fillStyle = '#fff';
+        ctx.strokeStyle = 'rgba(0,0,0,' + (0.28 + bf * 0.55) + ')';
+        ctx.lineWidth = 1.5 + bf * 1.8;
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = 'rgba(0,0,0,0.65)';
+        ctx.font = '600 13px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('B', n.x, n.y);
+      }
+    }
+
+    function drawCardBorderFlash() {
+      if (borderFlash <= 0 || nodeType !== 'card') return;
+      var n = nodePos();
+      ctx.beginPath();
+      ctx.roundRect(n.x - CARD_W / 2, n.y - CARD_H / 2, CARD_W, CARD_H, CARD_R);
+      ctx.strokeStyle = 'rgba(0,0,0,' + (0.22 + borderFlash * 0.6) + ')';
+      ctx.lineWidth = 1.5 + borderFlash * 2;
+      ctx.stroke();
+    }
+
+    // ── comet ─────────────────────────────────────────────────
+    var TRAIL_LEN = 38;
+    var trail = [];
+    var cometT = 0;
+    var COMET_SPEED = 0.00042;
+    var cometHidden = 0;
+
+    function drawComet(dt) {
+      var s = srcPos(), n = nodePos();
+      var prevT = cometT;
+      cometT = (cometT + COMET_SPEED * dt) % 1;
+
+      if (cometT < prevT) {
+        var impactAngle = Math.atan2(s.y - n.y, s.x - n.x);
+        var isCircle = nodeType === 'circle';
+        var r = isCircle ? CIRC_R : Math.max(CARD_W, CARD_H) / 2;
+        var ix = n.x + Math.cos(impactAngle) * r;
+        var iy = n.y + Math.sin(impactAngle) * r;
+        spawnCollision(impactAngle, ix, iy);
+        borderFlash = 1.0;
+        trail.length = 0;
+        cometHidden = 1400;
+      }
+
+      if (cometHidden > 0) {
+        cometHidden -= dt;
+        if (cometHidden <= 0) cometT = 0;
+        return;
+      }
+
+      var hx = s.x + (n.x - s.x) * cometT;
+      var hy = s.y + (n.y - s.y) * cometT;
+
+      var nodeR = nodeType === 'circle' ? CIRC_R : Math.max(CARD_W, CARD_H) / 2;
+      var distToNode = Math.hypot(n.x - hx, n.y - hy);
+      var fadeStart = nodeR * 2.5;
+      var fadeEnd = nodeR * 0.5;
+      var cometAlpha = distToNode <= fadeEnd ? 0 : distToNode >= fadeStart ? 1 : (distToNode - fadeEnd) / (fadeStart - fadeEnd);
+
+      if (cometAlpha <= 0) return;
+
+      trail.unshift({ x: hx, y: hy });
+      if (trail.length > TRAIL_LEN) trail.pop();
+
+      for (var i = 1; i < trail.length; i++) {
+        var frac = 1 - i / trail.length;
+        var ease = frac * frac * frac;
+        ctx.beginPath();
+        ctx.moveTo(trail[i - 1].x, trail[i - 1].y);
+        ctx.lineTo(trail[i].x, trail[i].y);
+        ctx.strokeStyle = 'rgba(0,0,0,' + (ease * 0.72 * cometAlpha) + ')';
+        ctx.lineWidth = 0.5 + frac * 2.8;
+        ctx.lineCap = 'round';
+        ctx.stroke();
+        if (i % 3 === 0 && Math.random() < 0.5) {
+          var ex = trail[i].x + (Math.random() - 0.5) * 8;
+          var ey = trail[i].y + (Math.random() - 0.5) * 8;
+          ctx.beginPath();
+          ctx.arc(ex, ey, 0.7 + frac * 1.2, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(0,0,0,' + (ease * 0.45 * cometAlpha) + ')';
+          ctx.fill();
+        }
+      }
+
+      ctx.beginPath(); ctx.arc(hx, hy, 3, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(0,0,0,' + (0.88 * cometAlpha) + ')';
+      ctx.fill();
+      ctx.beginPath(); ctx.arc(hx, hy, 1.4, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(0,0,0,' + cometAlpha + ')';
+      ctx.fill();
+    }
+
+    // ── main loop ─────────────────────────────────────────────
+    var last = performance.now();
+    function frame(now) {
+      var dt = Math.min(now - last, 50);
+      last = now;
+
+      // Recoil spring
+      recoil.vx += -recoil.x * 0.18;
+      recoil.vy += -recoil.y * 0.18;
+      recoil.vx *= 0.72;
+      recoil.vy *= 0.72;
+      recoil.x += recoil.vx;
+      recoil.y += recoil.vy;
+
+      // Border flash decay
+      borderFlash -= dt * 0.004;
+
+      positionCardEl();
+      ctx.clearRect(0, 0, W, H);
+
+      drawEdge();
+      drawSource();
+      drawCardBorderFlash();
+      drawDestNode();
+      updateParticles(dt);
+      drawParticles();
+      drawComet(dt);
+
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+
+    window.addEventListener('resize', function () {
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      resize();
+      trail.length = 0;
+    });
+  </script>
+</body>
+
+</html>

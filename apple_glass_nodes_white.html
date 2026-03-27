@@ -1,0 +1,200 @@
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    min-height: 100vh;
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 40px;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+  }
+
+  .row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 48px;
+    flex-wrap: wrap;
+    padding: 20px;
+  }
+
+  .node {
+    position: relative;
+    border-radius: 50%;
+    cursor: pointer;
+    flex-shrink: 0;
+    width: 96px; height: 96px;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  /* glass face */
+  .glass {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    z-index: 0;
+  }
+
+  /* specular glint */
+  .glint {
+    position: absolute;
+    top: 13%; left: 15%;
+    width: 40%; height: 24%;
+    border-radius: 50%;
+    background: radial-gradient(ellipse at 40% 40%, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0) 75%);
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .node-inner {
+    position: relative;
+    z-index: 3;
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .node-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: rgba(50,50,70,0.55);
+    letter-spacing: 0.3px;
+    user-select: none;
+  }
+
+  /* ── TINTS ── */
+  .tint-white .glass {
+    background: linear-gradient(135deg, rgba(255,255,255,0.55) 0%, rgba(240,240,248,0.25) 50%, rgba(220,220,235,0.12) 100%);
+    border: 1px solid rgba(200,200,220,0.45);
+    box-shadow:
+      inset 0 1.5px 2px rgba(255,255,255,0.8),
+      inset 0 -1px 2px rgba(180,180,200,0.15),
+      0 6px 20px rgba(0,0,0,0.07),
+      0 1px 5px rgba(0,0,0,0.05);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+
+  .tint-blue .glass {
+    background: linear-gradient(135deg, rgba(210,228,255,0.65) 0%, rgba(170,205,255,0.28) 50%, rgba(130,175,255,0.10) 100%);
+    border: 1px solid rgba(160,200,255,0.5);
+    box-shadow:
+      inset 0 1.5px 2px rgba(255,255,255,0.75),
+      inset 0 -1px 2px rgba(100,160,255,0.12),
+      0 6px 20px rgba(80,140,255,0.10),
+      0 1px 5px rgba(80,140,255,0.07);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+
+  .tint-rose .glass {
+    background: linear-gradient(135deg, rgba(255,215,225,0.65) 0%, rgba(255,185,205,0.28) 50%, rgba(255,150,175,0.10) 100%);
+    border: 1px solid rgba(255,185,205,0.5);
+    box-shadow:
+      inset 0 1.5px 2px rgba(255,255,255,0.75),
+      inset 0 -1px 2px rgba(255,120,155,0.10),
+      0 6px 20px rgba(255,100,140,0.09),
+      0 1px 5px rgba(255,100,140,0.06);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+
+  .tint-mint .glass {
+    background: linear-gradient(135deg, rgba(205,250,230,0.65) 0%, rgba(165,240,205,0.28) 50%, rgba(120,225,180,0.10) 100%);
+    border: 1px solid rgba(160,235,205,0.5);
+    box-shadow:
+      inset 0 1.5px 2px rgba(255,255,255,0.75),
+      inset 0 -1px 2px rgba(50,200,130,0.10),
+      0 6px 20px rgba(50,200,130,0.09),
+      0 1px 5px rgba(50,200,130,0.06);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+
+  .tint-amber .glass {
+    background: linear-gradient(135deg, rgba(255,238,185,0.65) 0%, rgba(255,218,140,0.28) 50%, rgba(255,195,80,0.10) 100%);
+    border: 1px solid rgba(255,218,145,0.5);
+    box-shadow:
+      inset 0 1.5px 2px rgba(255,255,255,0.75),
+      inset 0 -1px 2px rgba(220,160,30,0.10),
+      0 6px 20px rgba(220,160,30,0.09),
+      0 1px 5px rgba(220,160,30,0.06);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+
+  /* ── RECOIL ── */
+  .node.recoil { animation: recoil 320ms cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+  @keyframes recoil {
+    0%   { transform: scale(1); }
+    25%  { transform: scale(1.08); }
+    55%  { transform: scale(0.97); }
+    100% { transform: scale(1); }
+  }
+
+  .shimmer-ring {
+    position: absolute; inset: 0; border-radius: 50%;
+    pointer-events: none; z-index: 5;
+    animation: shimmer 280ms ease-out forwards;
+    background: radial-gradient(circle at 35% 28%, rgba(255,255,255,0.65) 0%, rgba(255,255,255,0) 58%);
+    opacity: 0;
+  }
+  @keyframes shimmer { 0% { opacity:0; transform:scale(0.5); } 35% { opacity:1; } 100% { opacity:0; transform:scale(1.08); } }
+
+  .ripple {
+    position: absolute; border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.5);
+    pointer-events: none; z-index: 4;
+    animation: ripple-out 380ms ease-out forwards;
+  }
+  @keyframes ripple-out { 0% { transform:scale(0.1); opacity:0.8; } 100% { transform:scale(0.93); opacity:0; } }
+</style>
+
+<div class="row">
+  <div class="node tint-white" onclick="triggerRecoil(this)">
+    <div class="glass"></div><div class="glint"></div>
+    <div class="node-inner"><span class="node-label">frost</span></div>
+  </div>
+  <div class="node tint-blue" onclick="triggerRecoil(this)">
+    <div class="glass"></div><div class="glint"></div>
+    <div class="node-inner"><span class="node-label">blue</span></div>
+  </div>
+  <div class="node tint-rose" onclick="triggerRecoil(this)">
+    <div class="glass"></div><div class="glint"></div>
+    <div class="node-inner"><span class="node-label">rose</span></div>
+  </div>
+  <div class="node tint-mint" onclick="triggerRecoil(this)">
+    <div class="glass"></div><div class="glint"></div>
+    <div class="node-inner"><span class="node-label">mint</span></div>
+  </div>
+  <div class="node tint-amber" onclick="triggerRecoil(this)">
+    <div class="glass"></div><div class="glint"></div>
+    <div class="node-inner"><span class="node-label">amber</span></div>
+  </div>
+</div>
+
+<script>
+function triggerRecoil(node) {
+  node.classList.remove('recoil');
+  void node.offsetWidth;
+  node.classList.add('recoil');
+
+  const shimmer = document.createElement('div');
+  shimmer.className = 'shimmer-ring';
+  node.appendChild(shimmer);
+  setTimeout(() => shimmer.remove(), 300);
+
+  const ripple = document.createElement('div');
+  const size = node.offsetWidth * 0.65;
+  ripple.className = 'ripple';
+  ripple.style.cssText = `width:${size}px;height:${size}px;top:${(node.offsetWidth-size)/2}px;left:${(node.offsetWidth-size)/2}px`;
+  node.appendChild(ripple);
+  setTimeout(() => ripple.remove(), 400);
+
+  node.addEventListener('animationend', () => node.classList.remove('recoil'), { once: true });
+}
+</script>
