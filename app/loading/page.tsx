@@ -5,8 +5,9 @@ import { motion } from "framer-motion";
 import { MessageCircle, Users, Brain, BarChart3, Zap, TrendingUp } from "lucide-react";
 import { MainLayout } from "@/components/layout/main-layout";
 import { PersonaNetworkDisplay } from "@/components/PersonaNetworkDisplay";
+import { ParticleText } from "@/components/ui/particle-text";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://personalabs-production.up.railway.app";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export default function LoadingPage() {
   const [currentStep, setCurrentStep] = useState(0);
@@ -134,24 +135,25 @@ export default function LoadingPage() {
         </div>
 
         <div className="w-full max-w-6xl mx-auto relative z-40">
-          {/* Header */}
+          {/* Particle Text Header */}
+          <div className="mb-4">
+            <ParticleText
+              text="Persona Labs"
+              fontSize={90}
+              particleSize={1.6}
+              particleGap={3}
+            />
+          </div>
           <motion.div
-            className="text-center mb-8"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+            className="text-center mb-8 -mt-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 1, delay: 1 }}
           >
-            <div className="flex items-center justify-center gap-2 mb-4">
-              <Brain className="text-gray-700" size={28} />
-              <span className="text-gray-600 text-xl">GNN Simulation Running</span>
-            </div>
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 leading-tight">
-              Simulating Market Adoption
-            </h1>
-            <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-              AI personas are being generated and the neural network is predicting adoption patterns
+            <p className="text-gray-500 text-lg">
+              Simulating market adoption across AI personas
             </p>
-            <p className="text-sm text-gray-400 mt-2 font-mono">Job ID: {jobId}</p>
+            <p className="text-sm text-gray-300 mt-2 font-mono">Job ID: {jobId}</p>
           </motion.div>
 
           {/* Main Content - 70/30 Layout */}

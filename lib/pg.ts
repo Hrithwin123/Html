@@ -12,7 +12,7 @@ const pool = new Pool({
 export async function connectToDatabase(): Promise<PoolClient> {
   const client = await pool.connect();
   
-  // Initialize the users table if it doesn't already exist
+  // Initialize all tables if they don't already exist
   try {
     await client.query(`
       CREATE TABLE IF NOT EXISTS users (
@@ -23,9 +23,35 @@ export async function connectToDatabase(): Promise<PoolClient> {
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
+
+      CREATE TABLE IF NOT EXISTS networks (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        society_type TEXT NOT NULL,
+        persona_count INTEGER NOT NULL,
+        personas JSONB NOT NULL,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_networks_user_id ON networks(user_id);
+      CREATE INDEX IF NOT EXISTS idx_networks_created_at ON networks(created_at DESC);
+
+      CREATE TABLE IF NOT EXISTS simulations (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        question TEXT NOT NULL,
+        personas JSONB NOT NULL,
+        persona_responses JSONB NOT NULL,
+        insights JSONB NOT NULL,
+        response_count INTEGER NOT NULL,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_simulations_user_id ON simulations(user_id);
+      CREATE INDEX IF NOT EXISTS idx_simulations_created_at ON simulations(created_at DESC);
     `);
   } catch (error) {
-    console.error('Failed to initialize users table:', error);
+    console.error('Failed to initialize database tables:', error);
   }
 
   return client;

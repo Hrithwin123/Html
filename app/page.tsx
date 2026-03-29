@@ -2,6 +2,7 @@
 
 import { HeroHighlight, Highlight } from "@/components/ui/hero-highlight";
 import { TextHoverEffect } from "@/components/ui/text-hover-effect";
+import { ParticleText } from "@/components/ui/particle-text";
 import { FloatingDock } from "@/components/ui/floating-dock";
 import { Home, MessageCircle, User, FileText, Rocket } from "lucide-react";
 import { motion } from "framer-motion"
@@ -24,20 +25,22 @@ const items = [
 
 
 export const dock = (
-  <motion.div initial={{ y: 100 }} animate={{ y: 0 }} transition={{ duration: 1, }} viewport={{ once: true }}>
+  <motion.div 
+    initial={{ opacity: 0, y: 30 }} 
+    animate={{ opacity: 1, y: 0 }} 
+    transition={{ duration: 1, delay: 0.6 }} 
+    className="relative z-[150] mt-20 flex items-center justify-center w-full -ml-24"
+  >
     <FloatingDock
       items={items}
       desktopClassName="
-      fixed bottom-8 left-1/2 -translate-x-1/2
-      bg-white/80 backdrop-blur-lg shadow-xl
-        rounded-2xl px-6 py-3
-        z-50
+        bg-white/90 backdrop-blur-xl shadow-2xl
+        rounded-2xl px-6 py-3 border border-gray-100/50
         "
       mobileClassName="
-        fixed bottom-0 left-0 w-full
-        bg-white border-t border-gray-200
+        bg-white/95 backdrop-blur-md border border-gray-200
         flex justify-around items-center py-3
-        z-50
+        rounded-3xl shadow-lg w-full max-w-[90vw] -ml-8
         "
     />
   </motion.div>
@@ -51,16 +54,29 @@ const button = (
 
 
 const hero = (
-  <div className="flex items-center justify-center  h-[85dvh] w-screen gap-3 flex-col text-[2rem] font-bold">
-    <div className="flex items-center justify-center h-50 ">
-      <TextHoverEffect text="Persona Labs" />
+  <div className="flex items-center justify-center min-h-[100dvh] w-full gap-2 flex-col text-[2rem] font-bold py-10">
+    <div className="w-full max-w-5xl flex items-center justify-center relative z-[100] -mb-10">
+      <ParticleText 
+        text="Persona Labs" 
+        fontSize={140} 
+        particleSize={1.1}
+        particleGap={3}
+      />
     </div>
-    <motion.div initial={{ y: 15 }} animate={{ y: 0 }} transition={{ duration: 0.5 }} className="flex items-center justify-center flex-col">
-      <div>Accelerate launches with <Highlight children={highlightText} /></div>
-      <div> Test product-market fit and refine messaging before spending a dollar.</div>
+    <motion.div 
+      initial={{ opacity: 0, y: 15 }} 
+      animate={{ opacity: 1, y: 0 }} 
+      transition={{ duration: 0.8, delay: 0.4 }} 
+      className="flex items-center justify-center flex-col z-[100] text-center px-4"
+    >
+      <div className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-black flex flex-wrap items-center justify-center gap-2">
+        Accelerate launches with <Highlight children={highlightText} />
+      </div>
+      <div className="text-gray-400 font-medium text-xl md:text-2xl mt-6 max-w-3xl leading-relaxed">
+        Test product-market fit and refine messaging before spending a dollar.
+      </div>
     </motion.div>
-    {button}
-
+    {dock}
   </div>
 )
 
@@ -70,7 +86,6 @@ export default function HomePage() {
   return (
     <div className="h-[100dvh] w-screen overflow-hidden">
       <HeroHighlight children={hero} />
-      {dock}
     </div>
   )
 
